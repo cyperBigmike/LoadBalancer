@@ -25,7 +25,6 @@ def choose_server(request):
     return servers_sockets[random_number]
 
 
-
 def route_request(client_socket):
     
     # Receive data from the client
