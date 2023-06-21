@@ -1,29 +1,30 @@
 import socket
-import multiprocessing
+import threading
+import random
 
 # Define the server inforamtions [ IP , PORT ]
 server_mapping = {
-    'server1': ('192.168.0.101', 80),
-    'server2': ('192.168.0.102', 80),
-    'server3': ('192.168.0.103', 80)
+    '1': ('192.168.0.101', 80),
+    '2': ('192.168.0.102', 80),
+    '3': ('192.168.0.103', 80)
 }
 
 
 
 #Create a socket between the LB and every server
-server1_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server1_socket.connect((server_mapping['sever1'][0], server_mapping['sever1'][1]))
+servers_sockets = []
+for i in range(3):
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.connect((server_mapping[str(i)][0], server_mapping[str(i)][1]))
+    servers_sockets.append(server_socket)
 
-server2_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server2_socket.connect((server_mapping['sever2'][0], server_mapping['sever2'][1]))
 
-server3_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server3_socket.connect((server_mapping['sever3'][0], server_mapping['sever3'][1]))
+#how servers are chosen 
+def choose_server(request):
+    random_number = random.randint(0, 2)
+    return servers_sockets[random_number]
 
-# Create a socket for the load balancer and the clients
-lb_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-lb_socket.bind(('10.0.0.1', 80))
-lb_socket.listen(10)
+
 
 def route_request(client_socket):
     
@@ -47,12 +48,18 @@ def route_request(client_socket):
     # Close the client connection
     client_socket.close()
 
+
+# Create a socket for the load balancer that the clients connect to.
+lb_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+lb_socket.bind(('10.0.0.1', 80))
+lb_socket.listen(10)
+
 while True:
     # Accept incoming client connections
     client_socket, address = lb_socket.accept()
     print('Received connection from:', address)
      # Start a new process to handle the request
-    process = multiprocessing.Process(target=route_request, args=(client_socket,))
-    process.start()
+    thread = threading.Thread(target=route_request, args=(client_socket))
+    thread.start()
 
     
