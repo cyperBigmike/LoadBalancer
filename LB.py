@@ -41,6 +41,8 @@ def choose_server(request):
     if not music_request:
         server12_exe = int(request[1])
         server3_exe = 2* int(request[1])
+        if 'V' in request:
+            server3_exe = 3* int(request[1])
     else: #M requset
         server12_exe = 2*int(request[1])
         server3_exe =  int(request[1])
