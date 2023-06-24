@@ -1,2 +1,2 @@
 ###load balancer 
-distribute requests from clinets between 3 servers 
+distribute requests from clients between 3 servers 
