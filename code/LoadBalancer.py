@@ -12,10 +12,9 @@ class LoadBalancer:
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(('10.0.0.1', 80))
         self.socket.listen(15)
-        self.ResponseQueue = Queue()
-        self.servers = [VideoServerHandler("192.168.0.101",80,self.ResponseQueue),
-                        VideoServerHandler("192.168.0.102",80,self.ResponseQueue),
-                        MusicServerHandler("192.168.0.103",80,self.ResponseQueue)]
+        self.servers = [VideoServerHandler("192.168.0.101",80),
+                        VideoServerHandler("192.168.0.102",80),
+                        MusicServerHandler("192.168.0.103",80)]
         self.Logic()
         
     def FindBestServer(self,request) -> ServerHandler:

@@ -5,7 +5,7 @@ import socket
 from Request import Request
 
 class ServerHandler:
-    def __init__(self,ip, port, musicMutiplier, VideoMutiplier, PictureMultiplier, responseQueue) -> None:
+    def __init__(self,ip, port, musicMutiplier, VideoMutiplier, PictureMultiplier) -> None:
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.connect((ip,port))
         self._musicMutiplier = musicMutiplier
@@ -13,8 +13,6 @@ class ServerHandler:
         self._pictureMultiplier = PictureMultiplier
         self._backlog = 0
         self._backlogLock = Lock()
-
-        
         
     def HandleRequest(self, request : Request):
         time = self.ComputeTimeToExecute(request)
@@ -29,16 +27,6 @@ class ServerHandler:
         self._backlogLock.release()
         
         return data
-        
-    def RequestLogic(self):
-        while True:
-            request = self.RequestQueue.get()
-            self._socket.sendall(request)
-
-    def ResponseLogic(self):
-        while True:
-            response = self._socket.recv(4096)
-            self.RequestQueue.put(response)
             
     def ComputeTimeToExecute(self, request : Request):
         requestType = request.RequestString[0]
