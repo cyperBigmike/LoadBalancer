@@ -1,8 +1,6 @@
 from MusicServerHandler import MusicServerHandler
 from VideoServerHandler import VideoServerHandler
 from ServerHandler import ServerHandler
-from Request import Request
-from queue import Queue
 import socket
 from threading import Thread
 
@@ -27,10 +25,10 @@ class LoadBalancer:
         with conn:
             requestString = conn.recv(4096).decode().strip()
             print("Got Request", requestString)
-            request = Request(requestString)
-            serverHandler = self.FindBestServer(request)
+            requestString
+            serverHandler = self.FindBestServer(requestString)
             print("Chose handler", serverHandler._socket.getpeername())
-            response = serverHandler.HandleRequest(request)
+            response = serverHandler.HandleRequest(requestString)
             print("Got Response", response)
             conn.sendall(response)
             print("Sent Response")

@@ -2,7 +2,6 @@ import threading
 from queue import Queue
 from threading import Thread, Lock
 import socket
-from Request import Request
 
 class ServerHandler:
     def __init__(self,ip, port, musicMutiplier, VideoMutiplier, PictureMultiplier) -> None:
@@ -14,12 +13,12 @@ class ServerHandler:
         self._backlog = 0
         self._backlogLock = Lock()
         
-    def HandleRequest(self, request : Request):
+    def HandleRequest(self, request):
         time = self.ComputeTimeToExecute(request)
         self._backlogLock.acquire()
         self._backlog += time
         self._backlogLock.release()
-        self._socket.sendall(request.RequestString.encode())
+        self._socket.sendall(request.encode())
         
         data = self._socket.recv(4096)
         self._backlogLock.acquire()
@@ -28,9 +27,9 @@ class ServerHandler:
         
         return data
             
-    def ComputeTimeToExecute(self, request : Request):
-        requestType = request.RequestString[0]
-        requestSize = int(request.RequestString[1])
+    def ComputeTimeToExecute(self, request):
+        requestType = request[0]
+        requestSize = int(request[1])
         # Match would btter here but assuming older python version
         time = float("inf")
         if requestType == "M":
