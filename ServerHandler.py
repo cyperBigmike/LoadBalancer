@@ -1,6 +1,6 @@
 import threading
 from queue import Queue
-from threading import Thread
+from threading import Thread, Lock
 import socket
 from Request import Request
 
@@ -11,16 +11,24 @@ class ServerHandler:
         self._musicMutiplier = musicMutiplier
         self._videoMultiplier = VideoMutiplier
         self._pictureMultiplier = PictureMultiplier
-        # self.RequestQueue = Queue() # Python queue's are threadsafe
-        # self._responseQueue = Queue()
-        
-        # Thread(target=self.RequestLogic()).start
-        # Thread(target=self.RequestLogic()).start
+        self._backlog = 0
+        self._backlogLock = Lock()
+
         
         
     def HandleRequest(self, request : Request):
-        self._socket.sendall(request.RequestString)
-        return self._socket.recv(4096)
+        time = self.ComputeTimeToExecute(request)
+        self._backlogLock.acquire()
+        self._backlog += time
+        self._backlogLock.release()
+        self._socket.sendall(request.RequestString.encode())
+        
+        data = self._socket.recv(4096)
+        self._backlogLock.acquire()
+        self._backlog -= time
+        self._backlogLock.release()
+        
+        return data
         
     def RequestLogic(self):
         while True:
@@ -34,14 +42,20 @@ class ServerHandler:
             
     def ComputeTimeToExecute(self, request : Request):
         requestType = request.RequestString[0]
-        requestSize = request.RequestString[1]
+        requestSize = int(request.RequestString[1])
         # Match would btter here but assuming older python version
+        time = float("inf")
         if requestType == "M":
-            return self._musicMutiplier * requestSize
+            time = self._musicMutiplier * requestSize
         elif requestType == "V":
-            return self._videoMultiplier * requestSize
+            time = self._videoMultiplier * requestSize
         elif requestType == "P":
-            return self._pictureMultiplier * requestSize
+            time = self._pictureMultiplier * requestSize
+        self._backlogLock.acquire()
+        time += self._backlog
+        self._backlogLock.release()
+        
+        return time
 
         
         
